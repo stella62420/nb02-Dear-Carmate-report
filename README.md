@@ -1,16 +1,75 @@
 # 📝 개인 개발 레포트
 
+---
+
 ## 1. 프로젝트 개요
-- **프로젝트 이름**: Dear Carmate
-- **기간**: 2025.07.22 ~ 2025.08.19
-- **역할/포지션**:  
-  - 계약 API 개발  
-  - 에러 핸들러 구현  
-  - 문서 작성 (위키, 이슈, PR 템플릿)  
-  - 디스코드 웹훅 연결  
-  - 계약서 API 개발 지원 (프로젝트 기간 이후 진행)  
+
+* **프로젝트 이름**: Dear Carmate
+* **기간**: 2025. 07. 22 \~ 2025. 08. 19
+* **역할/포지션**:
+
+  * 계약 API 작성 (의존성 높은 핵심 API)
+  * 에러 핸들러(미들웨어) 개발
+  * 문서(위키, 이슈, PR) 템플릿 작성
+  * 디스코드 웹 훅 연결
+  * 계약서 API 서포트
 
 ---
+
+### 1.1 개발 환경 & 기술 스택
+
+| 구분                                | 기술 스택                                                |
+| --------------------------------- | ---------------------------------------------------- |
+| **Backend**                       | TypeScript(5.8.3), Node.js(22.15.0), Express(4.18.2) |
+| **DB & ORM**                      | PostgreSQL, Prisma(6.12.0)                           |
+| **Authentication & Security**     | Bcrypt(6.0.0), JWT(9.0.10), Cookie-Parser(1.4.9)     |
+| **Upload**                        | csv-parser(6.1.0), Multer(2.0.2)                     |
+| **Testing & API Docs**            | Postman, Swagger                                     |
+| **Collaboration & Communication** | GitHub, Notion, Discord                              |
+
+---
+
+### 1.2 프로젝트 구조
+
+프로젝트는 **기능 단위 API 폴더링**을 적용하여, 각 도메인별로 `dto`, `routes`, `controller`, `repository`, `service`를 배치함으로써 **응집도와 유지보수성**을 강화하였다.
+
+```bash
+src
+ ┣ cars/                # 차량 API
+ ┣ contracts/           # 계약 API (의존성 높음, 핵심 도메인)
+ ┣ contract-documents/  # 계약 문서 업로드/다운로드
+ ┣ dashboard/           # 계약 현황 및 데이터 집계
+ ┣ common/              # 상수, enums, errors, utils
+ ┣ middlewares/         # 인증, 에러, 업로드 처리 미들웨어
+ ┣ users/               # 사용자 관련 API
+ ┣ app.ts / main.ts     # 서버 엔트리포인트
+```
+
+#### 설계 특징
+
+* **Layered Architecture**: Controller → Service → Repository → Prisma 구조 반영
+* **Converter & Mapper 패턴**: DTO ↔ DB 모델 간 변환을 통일성 있게 관리
+* **Error Middleware + Custom Error Class**: 일관된 에러 응답 제공 (본인 구현)
+* **확장성**: 새로운 도메인 추가 시 동일한 패턴 재사용 가능
+
+---
+
+### 1.3 주요 기여 포인트
+
+* **계약 API 개발**
+
+  * 프로젝트 내에서 가장 **의존성이 높은 API**를 담당하여, 차량/계약문서/고객 정보 등 여러 도메인과 연계.
+  * 단순 CRUD를 넘어 **데이터 매핑과 응답 일관성 보장**을 위해 `ContractMapper`를 도입.
+  * API 명세와 실제 프론트 요청 불일치 문제를 직접 확인·조정하여 안정적인 응답 구조를 설계.
+
+* **에러 핸들러 미들웨어 개발**
+
+  * 프로젝트 전역에서 발생하는 예외를 통합 관리.
+  * `AppError`를 중심으로 커스텀 에러 클래스를 정의하고, 이를 처리하는 **Error Middleware**를 작성하여 **일관된 응답 포맷(JSON)** 제공.
+  * 디버깅 효율성을 높이고, 프론트엔드와의 협업 시 **예측 가능한 에러 구조**를 지원.
+
+---
+
 
 ## 2. 요구사항 정의 및 기획 기여
 - **요구사항 분석 기여**:  
