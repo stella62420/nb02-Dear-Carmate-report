@@ -119,7 +119,16 @@ src
 
 ---
 
-### 3.1.1 API 별 요청/응답 스펙
+### 3.1.1 API 별 요청/응답 스펙 (전역 에러 미들웨어 적용)
+
+> 공통 규칙  
+> - 오류 응답 JSON 키: **`{ "message": string }`**  
+> - 상태코드는 throw된 커스텀 에러/Prisma 에러에 따름  
+>   - BadRequestError → 400, UnauthorizedError → 401, ForbiddenError → 403, NotFoundError → 404, ConflictError → 409  
+>   - Prisma: P2025 → 404, P2002 → 409  
+>   - 처리되지 않은 예외 → 500
+
+---
 
 #### 1) 계약 생성 (POST `/contracts`)
 - **Request (CreateContractDto)**:
@@ -136,8 +145,7 @@ src
     ]
   }
 
-
-* **성공 Response (200)**:
+* **성공 (200)**:
 
   ```json
   {
@@ -153,23 +161,11 @@ src
   }
   ```
 
-* **오류 Response**:
+* **오류**:
 
-  * `400 Bad Request`
-
-    ```json
-    { "error": "Invalid contract data" }
-    ```
-  * `403 Forbidden`
-
-    ```json
-    { "error": "You do not have permission to create this contract" }
-    ```
-  * `500 Internal Server Error`
-
-    ```json
-    { "error": "Unexpected error occurred while creating contract" }
-    ```
+  * 401 인증 필요 → `{"message":"로그인이 필요합니다."}`
+  * 409 중복(Prisma P2002 등) → `{"message":"중복된 데이터가 존재합니다."}`
+  * 500 기타 예외 → `{"message":"서버 내부 오류"}`
 
 ---
 
@@ -190,7 +186,7 @@ src
   }
   ```
 
-* **성공 Response (200)**:
+* **성공 (200)**:
 
   ```json
   {
@@ -206,35 +202,20 @@ src
   }
   ```
 
-* **오류 Response**:
+* **오류**:
 
-  * `400 Bad Request`
-
-    ```json
-    { "error": "Invalid update payload" }
-    ```
-  * `404 Not Found`
-
-    ```json
-    { "error": "Contract not found" }
-    ```
-  * `403 Forbidden`
-
-    ```json
-    { "error": "You do not have permission to modify this contract" }
-    ```
+  * 403 권한 없음 → `{"message":"접근 권한이 없습니다."}`
+  * 404 없음(Prisma P2025/미존재 ID) → `{"message":"요청한 리소스를 찾을 수 없습니다."}`
+  * 409 충돌/중복 → `{"message":"요청 처리 중 충돌이 발생했습니다."}`
+  * 500 기타 예외 → `{"message":"서버 내부 오류"}`
 
 ---
 
 #### 3) 계약 목록 조회 (GET `/contracts`)
 
-* **Request (Query Params)**:
+* **Query**: `?searchBy=customer&keyword=홍길동&page=1&pageSize=10&grouped=false`
 
-  ```
-  /contracts?searchBy=customer&keyword=홍길동&page=1&pageSize=10&grouped=false
-  ```
-
-* **성공 Response (200)**:
+* **성공 (200)**:
 
   ```json
   [
@@ -252,24 +233,16 @@ src
   ]
   ```
 
-* **오류 Response**:
+* **오류**:
 
-  * `401 Unauthorized`
-
-    ```json
-    { "error": "Authentication required" }
-    ```
-  * `500 Internal Server Error`
-
-    ```json
-    { "error": "Failed to load contracts" }
-    ```
+  * 401 인증 필요 → `{"message":"로그인이 필요합니다."}`
+  * 500 기타 예외 → `{"message":"서버 내부 오류"}`
 
 ---
 
 #### 4) 계약용 차량 조회 (GET `/contracts/cars`)
 
-* **성공 Response (200)**:
+* **성공 (200)**:
 
   ```json
   [
@@ -278,18 +251,10 @@ src
   ]
   ```
 
-* **오류 Response**:
+* **오류**:
 
-  * `401 Unauthorized`
-
-    ```json
-    { "error": "Authentication required" }
-    ```
-  * `500 Internal Server Error`
-
-    ```json
-    { "error": "Failed to fetch available cars" }
-    ```
+  * 401 인증 필요 → `{"message":"로그인이 필요합니다."}`
+  * 500 기타 예외 → `{"message":"서버 내부 오류"}`
 
 ### 3.2 코드 품질
 - **주석 사용**:  
